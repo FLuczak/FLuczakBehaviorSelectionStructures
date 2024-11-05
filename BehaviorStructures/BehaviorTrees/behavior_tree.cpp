@@ -3,6 +3,7 @@
 #include "../Serialization/editor_variables.hpp"
 #include "behaviors.hpp"
 #include "../Serialization/generic_factory.hpp"
+#include "behaviors.hpp"
 
 void fluczakAI::BehaviorTree::Execute(fluczakAI::BehaviorTreeContext& context) const
 {
@@ -115,7 +116,7 @@ nlohmann::json fluczakAI::BehaviorTree::Serialize()
 #define PARSE(type, comparisonType) \
     type value;                                 \
     stream >> value;                            \
-    Comparison(fluczakAI::Comparator<type>(comparisonKey, static_cast<ComparisonType>(comparisonType), value));
+    builder.Comparison(fluczakAI::Comparator<type>(comparisonKey, static_cast<ComparisonType>(comparisonType), value));
 
 void fluczakAI::BehaviorTree::DeserializeBehavior(const nlohmann::json& json, BehaviorTreeBuilder& builder)
 {
@@ -206,8 +207,8 @@ void fluczakAI::BehaviorTree::Deserialize(nlohmann::json& json)
 {
     std::string version = json["version"];
     BehaviorTreeBuilder builder;
-    if (json["behavior-structure-type"].get<std::string>() != "BehaviorTree") return {};
-    if (!json.contains("children")) return {};
+    if (json["behavior-structure-type"].get<std::string>() != "BehaviorTree") return;
+    if (!json.contains("children")) return;
     const auto toDeserialize = json.at("children")[0];
     DeserializeBehavior(toDeserialize,builder);
     const std::unique_ptr<BehaviorTree> newTree = builder.End();

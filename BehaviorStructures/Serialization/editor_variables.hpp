@@ -18,33 +18,38 @@ struct PathHelper
     std::string format{};
 };
 
-	template <typename U>
-concept HasToString = requires(const U & type)
-{
-    { std::to_string(type) } -> std::convertible_to<std::string>;
-};
+    template <typename T>
+    struct StructTests
+    {
+        template <typename U>
+        static std::true_type TestToString(decltype(std::to_string(std::declval<U>())));
 
-template <typename U>
-concept HasIterators = requires(const U & type)
-{
-    type.begin();
-    type.end();
-};
+        template <typename>
+        static std::false_type TestToString(...);
 
-template <typename U, typename  T>
-concept HasPushBack = requires(U u, T t)
-{
-    { u.push_back(t) } -> std::same_as<void>;
-    { u.push_back(std::move(t)) } -> std::same_as<void>;
-};
+        template <typename U>
+        static std::true_type TestIterators(typename U::iterator*);
 
-template <typename U, typename  T>
-concept HasInsert = requires(U u, T t)
-{
-    { u.insert(t) } -> std::same_as<void>;
-    { u.insert(std::move(t)) } -> std::same_as<void>;
-};
+        template <typename>
+        static std::false_type TestIterators(...);
 
+        template <typename U>
+        static auto TestPushBack(U* u) -> decltype(u->push_back({}), std::true_type{});
+
+        template <typename>
+        static std::false_type TestPushBack(...);
+
+        template <typename U>
+        static auto TestInsert(U* u) -> decltype(u->insert({}), std::true_type{});
+
+        template <typename>
+        static std::false_type TestInsert(...);
+
+        static constexpr bool toString = decltype(TestToString<T>(nullptr))::value;
+        static constexpr bool iterators = decltype(TestIterators<T>(nullptr))::value;
+        static constexpr bool pushBack = decltype(TestPushBack<T>(nullptr))::value;
+        static constexpr bool insert = decltype(TestInsert<T>(nullptr))::value;
+    };
 
 class EditorVariable
 {
@@ -91,7 +96,7 @@ public:
             return val;
         }
 
-        if constexpr (HasToString<T>)
+        if constexpr (StructTests<T>::toString)
         {
             return std::to_string(val);
         }
@@ -106,7 +111,7 @@ public:
             return ss.str();
         }
 
-        if constexpr (HasIterators<T>)
+        if constexpr (StructTests<T>::toString)
         {
             std::stringstream ss;
             for (auto element : val)
@@ -176,11 +181,11 @@ public:
 		    SerializedField<ElementType> temp(d);
 		    temp.Deserialize(content);
 
-		    if constexpr (HasPushBack<T, ElementType>)
+		    if constexpr (StructTests<T>::pushBack)
 		    {
 			    toReturn.push_back(temp.GetValue());
 		    }
-		    else if constexpr (HasInsert<T, ElementType> && !HasPushBack<T, ElementType>)
+		    else if constexpr (StructTests<T>::insert && !StructTests<T>::pushBack)
 		    {
 			    toReturn.insert(temp.GetValue());
 		    }
@@ -222,13 +227,13 @@ public:
             return DeserializeEnum(stringStream);
         }
 
-        if constexpr (HasToString<T>)
+        if constexpr (StructTests<T>::toString)
         {
             stringStream >> toReturn;
             return toReturn;
         }
 
-        if constexpr (HasIterators<T> && !std::is_same<T, std::string>::value)
+        if constexpr (StructTests<T>::iterators && !std::is_same<T, std::string>::value)
         {
             return DeserializeCollection(stringStream);
         }
@@ -309,7 +314,7 @@ public:
 	/// @return A `std::type_index` representing the type of the elements in the stored type if iterable, or `void*` otherwise.
     std::type_index GetUnderlyingType() const override
     {
-        if constexpr (HasIterators<T>)
+        if constexpr (StructTests<T>::iterators)
         {
             return typeid(*value.begin());
         }

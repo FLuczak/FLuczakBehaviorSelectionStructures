@@ -10,6 +10,7 @@ namespace fluczakAI
  * \brief A class for a behavior tree. It can be executed using an Execute() function and a
  * behavior tree execution context.
  */
+    class BehaviorTreeBuilder;
 class BehaviorTree : public ISerializable
     {
     public:
