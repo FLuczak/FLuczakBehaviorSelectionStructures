@@ -72,3 +72,13 @@ std::unique_ptr<fluczakAI::BehaviorTree> fluczakAI::BehaviorTreeBuilder::End()
     auto behavior_tree = std::make_unique<fluczakAI::BehaviorTree>(m_treeRoot);
     return std::move(behavior_tree);
 }
+
+#if defined(NLOHMANN_JSON_VERSION_MAJOR)
+nlohmann::json fluczakAI::BehaviorTreeBuilder::Serialize()
+{
+}
+
+void fluczakAI::BehaviorTreeBuilder::Deserialize(nlohmann::json& json)
+{
+}
+#endif

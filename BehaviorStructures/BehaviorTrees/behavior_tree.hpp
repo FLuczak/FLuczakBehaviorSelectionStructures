@@ -1,6 +1,8 @@
 #pragma once
 #include <memory>
 #include "behaviors.hpp"
+#include "behavior_tree_builder.hpp"
+#include "../Serialization/iserializable.hpp"
 
 namespace fluczakAI
 {
@@ -8,7 +10,7 @@ namespace fluczakAI
  * \brief A class for a behavior tree. It can be executed using an Execute() function and a
  * behavior tree execution context.
  */
-class BehaviorTree
+class BehaviorTree : public ISerializable
     {
     public:
         BehaviorTree(std::unique_ptr<Behavior>& rootToSet);
@@ -23,10 +25,18 @@ class BehaviorTree
          */
         std::unique_ptr<Behavior>& GetRoot()  { return m_root; }
 
-        std::stringstream Serialize() const;
-        static std::unique_ptr<BehaviorTree> Deserialize(std::stringstream& stringstream);
+#if defined(NLOHMANN_JSON_VERSION_MAJOR)
+        static void SerializeBehavior(nlohmann::json& json, const std::unique_ptr<Behavior>& behavior);
+        nlohmann::json Serialize() override;
+
+        void DeserializeBehavior(const nlohmann::json& json, BehaviorTreeBuilder& builder);
+        void DeserializeAction(std::string& actionName, const nlohmann::json& variables, BehaviorTreeBuilder& builder) const;
+        void Deserialize(nlohmann::json& json) override;
+#endif
     private:
         std::unique_ptr<Behavior> m_root = {};
+
+
     };
 }
 

@@ -1,0 +1,9 @@
+[submodule "BehaviorStructures/Serialization/json"]
+	path = BehaviorStructures/Serialization/json
+	url = https://github.com/nlohmann/json.git
+[submodule "BehaviorStructures/Serialization/magic_enum"]
+	path = BehaviorStructures/Serialization/magic_enum
+	url = https://github.com/Neargye/magic_enum.git
+[submodule "BehaviorStructures/Serialization/visit_struct"]
+	path = BehaviorStructures/Serialization/visit_struct
+	url = https://github.com/cbeck88/visit_struct.git

@@ -11,7 +11,7 @@
 namespace fluczakAI
 {
     template <typename T>
-    struct HasToString
+    struct HasToStringBlackboard
     {
         template <typename U>
         static auto Test(U*) -> decltype(std::to_string(std::declval<U>()), std::true_type{});
@@ -23,7 +23,7 @@ namespace fluczakAI
     };
 
     template <typename T>
-    struct HasIterators
+    struct HasIteratorsBlackboard
     {
     private:
         template <typename U>

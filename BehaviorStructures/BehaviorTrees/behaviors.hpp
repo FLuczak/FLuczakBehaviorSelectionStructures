@@ -5,6 +5,7 @@
 #include "../Blackboards/blackboard.hpp"
 #include "../Blackboards/comparator.hpp"
 #include "../execution_context.hpp"
+#include "../Serialization/json/single_include/nlohmann/json.hpp"
 
 namespace fluczakAI
 {
@@ -111,6 +112,17 @@ struct BehaviorTreeContext;
     public:
         BehaviorTreeAction() : Behavior(-1){}
         void SetId(int id) { m_id = id; }
+    	/**
+		* \brief Register a variable for serialization
+		* \param name - the name of the variable
+		* \param variable - a reference to the variable to be serialized
+		*/
+        void RegisterEditorVariable(const std::string& name, EditorVariable* variable)
+        {
+            editorVariables[name] = variable;
+        }
+
+        std::unordered_map<std::string, EditorVariable*> editorVariables{};
     };
 
     /**
@@ -176,6 +188,13 @@ struct BehaviorTreeContext;
          * \brief A getter function for the child of the decorator
          * \return - a unique_ptr to the child
          */
+         /**
+		  * \brief A custom serialization function for a decorator behavior
+		  * \param stream - a stream the decorator is going to be serialized into.
+		  */
+#if defined(NLOHMANN_JSON_VERSION_MAJOR)
+    	virtual void Serialize(nlohmann::json& json) const {}
+#endif
         const std::unique_ptr<Behavior>& GetChild() const { return m_child;}
     protected:
         std::unique_ptr<Behavior> m_child{};
@@ -198,6 +217,18 @@ struct BehaviorTreeContext;
          * \return - The result of the evaluation
          */
         Status Tick(BehaviorTreeContext& context) override;
+#if defined(NLOHMANN_JSON_VERSION_MAJOR)
+
+    	/**
+		 * \brief Serialization function of the comparator
+		 * \param stream - the stream the comparator is going to be serialized to
+		 */
+        void Serialize(nlohmann::json& json) const override
+        {
+            json["comparator"] = m_comparator.ToString();
+        }
+#endif
+
     private:
         Comparator<T> m_comparator;
         bool m_isNegation = false;
@@ -277,6 +308,14 @@ struct BehaviorTreeContext;
     public:
         Repeater(int id, int repeats) : Decorator(id), m_numRepeats(repeats) {}
         Status Tick(BehaviorTreeContext& context) override;
+
+#if defined(NLOHMANN_JSON_VERSION_MAJOR)
+        void Serialize(nlohmann::json& json) const override
+        {
+            json["num-repeats"] = m_numRepeats;
+        }
+#endif
+
     private:
         int m_numRepeats = 0;
     };

@@ -12,7 +12,7 @@ class BehaviorTree;
 /**
  * \brief builder for a behavior tree. It can be used to construct a behavior tree.
  */
-class BehaviorTreeBuilder
+class BehaviorTreeBuilder 
 {
 public:
     /**
@@ -85,9 +85,11 @@ public:
      * \return - a unique_ptr to the behavior tree
      */
     std::unique_ptr<BehaviorTree> End();
+    int GetId() const { return id; }
+    void AddBehavior(std::unique_ptr<fluczakAI::Behavior> behavior);
+    const std::stack<fluczakAI::Behavior*>& GetNodeStack() { return m_nodeStack; }
 private:
     int id = 0;
-    void AddBehavior(std::unique_ptr<fluczakAI::Behavior> behavior);
     std::unique_ptr<fluczakAI::Behavior> m_treeRoot = nullptr;
     std::stack<fluczakAI::Behavior*> m_nodeStack{};
 };

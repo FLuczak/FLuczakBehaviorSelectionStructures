@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <optional>
 
+#include "../Serialization/iserializable.hpp"
 #include "../Blackboards/Blackboard.hpp"
 #include "../Blackboards/comparator.hpp"
 #include "../execution_context.hpp"
@@ -116,7 +117,7 @@ private:
     TransitionData& m_data;
 };
 
-class FiniteStateMachine 
+class FiniteStateMachine : public ISerializable
 {
 public:
     FiniteStateMachine()
@@ -247,20 +248,13 @@ public:
     void SetCurrentState(size_t stateToSet,StateMachineContext& context) const;
 
     /**
-     * \brief Turn this state machine into a string stream
-     * \return - a string stream containing information about this FSM states and transitions between them
-     */
-    std::stringstream Serialize() const;
-
-
-    /**
      * \brief Get a vector of IDs of states of a given type. If no states like this exist,
      * an empty vector is returned.
      * \tparam T - the type of the state
      * \return - a vector of ids of states of type T
      */
     template<typename T>
-    std::vector<size_t> GetStateIDsOfType()
+    std::vector<size_t> GetStateIDsOfType() const
     {
         std::vector<size_t> toReturn{};
 
@@ -277,7 +271,7 @@ public:
         return toReturn;
     }
     template<typename T>
-    bool StateExists()
+    bool StateExists() const
     {
         std::vector<size_t> stateVec = GetStateIDsOfType<T>();
         return !stateVec.empty();
@@ -288,13 +282,16 @@ public:
         return typeid(*m_states[index]);
     }
 
-    /**
-     * \brief - Given a stringstream, return a unique ptr to a finitestatemachine created by deserializing
-     * them from the string stream.
-     * \param stream - a string stream with states and transitions to them
-     * \return - a unique ptr to a finite state machine
-     */
-    static std::unique_ptr<FiniteStateMachine> DeserializeFromStringStream(std::stringstream& stream);
+    #if defined(NLOHMANN_JSON_VERSION_MAJOR)
+		void DeserializeStates(const nlohmann::json& json);
+		void DeserializeTransitions(const nlohmann::json& json, TransitionData& tempData) const;
+		void DeserializeTransitionData(const nlohmann::json& json);
+	    void Deserialize(nlohmann::json& json) override;
+
+        void SerializeTransitions(nlohmann::json& transitions) const;
+        void SerializeStates(nlohmann::json& states)const;
+	    nlohmann::json Serialize() override;
+	#endif
 private:
     std::optional<size_t> m_defaultState = {};
     std::vector<std::unique_ptr<State>> m_states{};
